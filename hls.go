@@ -18,24 +18,24 @@ import (
 )
 
 const (
-	allowOutput 	bool = true
-	defaultChannels int = 25
-	aesMethod 		string = "AES-128"
+	allowOutput     bool   = true
+	defaultChannels int    = 25
+	aesMethod       string = "AES-128"
 )
 
 type downloader struct {
-	lock 	 		sync.Mutex
-	segments 		[]*m3u8.MediaSegment
-	segmentCount 	int
-	completed 		int
-	filename 		string 
-	channelCount 	int
-	client 			*httpClient
+	lock         sync.Mutex
+	segments     []*m3u8.MediaSegment
+	segmentCount int
+	completed    int
+	filename     string
+	channelCount int
+	client       *httpClient
 }
 
 func writeOutput(format string, a ...interface{}) {
 	if allowOutput {
-		fmt.Printf(format + "\n", a...)
+		fmt.Printf(format+"\n", a...)
 	}
 }
 
@@ -123,12 +123,12 @@ func newDownloader(client *httpClient, name, m3u8URL string, channels int) (*dow
 		mediaSegments[i] = segment
 	}
 
-	download := &downloader {
-		segmentCount: 	segCount,
-		segments: 		mediaSegments,
-		filename: 		name,
-		channelCount: 	channels,
-		client:			client,
+	download := &downloader{
+		segmentCount: segCount,
+		segments:     mediaSegments,
+		filename:     name,
+		channelCount: channels,
+		client:       client,
 	}
 	return download, nil
 }
@@ -202,7 +202,7 @@ func (d *downloader) merge() error {
 		if err != nil {
 			if err, ok := err.(*os.PathError); ok == false {
 				writeOutput("Error reading bytes from %d: %v", i, err)
-			}			
+			}
 			continue
 		}
 
@@ -229,15 +229,15 @@ func findAbsoluteBinary(name string) string {
 }
 
 func (d *downloader) toMP4() error {
-	writeOutput("Converting %q to %q", d.filename + ".ts", d.filename + ".mp4")
+	writeOutput("Converting %q to %q", d.filename+".ts", d.filename+".mp4")
 	cmd := exec.Command(
 		findAbsoluteBinary("ffmpeg"),
-		"-i", d.filename + ".ts",
+		"-i", d.filename+".ts",
 		"-map", "0",
 		"-c:v", "copy",
 		"-c:a", "copy",
 		"-metadata", `encoding_tool="no_variable_data"`,
-		"-y", d.filename + ".mp4",
+		"-y", d.filename+".mp4",
 	)
 	cmd.Dir = tempDir
 
@@ -284,7 +284,7 @@ func (d *downloader) downloadSegment(id int, segment *m3u8.MediaSegment) error {
 		blockMode.CryptBlocks(origData, respBytes)
 
 		length := len(origData)
-		respBytes = origData[:(length - int(origData[length - 1]))]	
+		respBytes = origData[:(length - int(origData[length-1]))]
 	}
 
 	// Credits to github.com/oopsguy/m3u8 for this
@@ -305,9 +305,9 @@ func (d *downloader) downloadSegment(id int, segment *m3u8.MediaSegment) error {
 	}
 
 	d.completed = d.completed + 1
-	if d.completed % 20 == 0 {
+	if d.completed%20 == 0 {
 		writeOutput("%d out of %d segements downloaded!", d.completed, d.segmentCount)
-	}		
+	}
 	return nil
 }
 

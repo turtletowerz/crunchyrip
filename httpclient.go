@@ -42,7 +42,7 @@ func newHTTPClient() *httpClient {
 
 	logInfo("User-Agent: " + userAgent)
 
-	return &httpClient {
+	return &httpClient{
 		Client:    client,
 		UserAgent: userAgent,
 	}
@@ -66,7 +66,7 @@ func (c *httpClient) Get(url string) (*http.Response, error) {
 // Taken from https://godoc.org/golang.org/x/net/html#example-Parse
 func loopFindToken(n *html.Node) string {
 	if n.Type == html.ElementNode && n.Data == "input" {
-		var exists bool 
+		var exists bool
 		var token string
 
 		for _, data := range n.Attr {
@@ -107,7 +107,7 @@ func (c *httpClient) Login(user, pass string) error {
 		return fmt.Errorf("unable to find token")
 	}
 
-	body := url.Values {
+	body := url.Values{
 		"login_form[name]":         {user},
 		"login_form[password]":     {pass},
 		"login_form[redirect_url]": {"/"},
@@ -117,20 +117,20 @@ func (c *httpClient) Login(user, pass string) error {
 	if _, err := c.Client.PostForm("https://www.crunchyroll.com/login", body); err != nil {
 		return fmt.Errorf("posting authentication request")
 	}
-// Re-implement this
-/*
-	if resp, err := c.Get("http://www.crunchyroll.com/"); err == nil {
-		checkDoc, err := goquery.NewDocumentFromResponse(resp)
-		if err != nil {
-			return errors.New("Failed to parse session validation page: " + err.Error())
-		}
+	// Re-implement this
+	/*
+		if resp, err := c.Get("http://www.crunchyroll.com/"); err == nil {
+			checkDoc, err := goquery.NewDocumentFromResponse(resp)
+			if err != nil {
+				return errors.New("Failed to parse session validation page: " + err.Error())
+			}
 
-		if resp.StatusCode == 200 && strings.TrimSpace(checkDoc.Find("li.username").First().Text()) != "" {
-			return nil
+			if resp.StatusCode == 200 && strings.TrimSpace(checkDoc.Find("li.username").First().Text()) != "" {
+				return nil
+			}
+			return errors.New("Failed to validate login")
 		}
-		return errors.New("Failed to validate login")
-	}
-	return errors.New("Failed to get crunchyroll website")
-*/
+		return errors.New("Failed to get crunchyroll website")
+	*/
 	return nil
 }

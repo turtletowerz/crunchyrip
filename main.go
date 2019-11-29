@@ -6,27 +6,27 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
-	"strconv"	
+	"strconv"
 	"time"
 
 	"github.com/fatih/color"
 )
 
 const (
-	crunchyrollReg  string = `https://www.crunchyroll.com/([a-z0-9-]+)/?([a-z0-9-]+)?`
-	prefix			string = "[crunchyrip] "
-	illegalChars 	string = `[\\\\/:*?\"<>|]`
-	pathSep 		string = string(os.PathSeparator)	
+	crunchyrollReg string = `https://www.crunchyroll.com/([a-z0-9-]+)/?([a-z0-9-]+)?`
+	prefix         string = "[crunchyrip] "
+	illegalChars   string = `[\\\\/:*?\"<>|]`
+	pathSep        string = string(os.PathSeparator)
 )
 
 var (
 	tempDir   string = os.TempDir() + string(os.PathSeparator) + "crunchyrip"
 	tsStorage string = tempDir + pathSep + "tsStorage"
-	
-	// I need to figure out the anime with the most seasons
-	numbers      = []string{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"}
 
-	resolutionList = map[string]string {
+	// I need to figure out the anime with the most seasons
+	numbers = []string{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"}
+
+	resolutionList = map[string]string{
 		"240":  "428x240",
 		"360":  "640x360",
 		"480":  "848x480",
@@ -36,15 +36,15 @@ var (
 )
 
 func logCyan(format string, a ...interface{}) {
-	color.Cyan(prefix + format, a...)
+	color.Cyan(prefix+format, a...)
 }
 
 func logInfo(format string, a ...interface{}) {
-	color.White(prefix + format, a...)
+	color.White(prefix+format, a...)
 }
 
 func logSuccess(format string, a ...interface{}) {
-	color.Green(prefix + format, a...)
+	color.Green(prefix+format, a...)
 }
 
 func logError(err error) {
@@ -69,7 +69,7 @@ func getSeason(season string) string {
 	if num == 0 {
 		return "Specials"
 	}
-	return "Season " + numbers[num - 1]
+	return "Season " + numbers[num-1]
 }
 
 func main() {
@@ -96,7 +96,7 @@ func main() {
 		return
 	}
 
-	logSuccess("Crunchyroll login successful!")	
+	logSuccess("Crunchyroll login successful!")
 	if err := download(crunchyrollClient, flag.Arg(2), *quality, *subs); err != nil {
 		logError(err)
 	}
@@ -148,7 +148,7 @@ func download(client *httpClient, showURL, quality, subLang string) error {
 			continue
 		}
 
-		if err := renameFile(tempDir + pathSep + "episode.mp4", filepath + filename); err != nil {
+		if err := renameFile(tempDir+pathSep+"episode.mp4", filepath+filename); err != nil {
 			logError(fmt.Errorf("renaming file: %w", err))
 			continue
 		}

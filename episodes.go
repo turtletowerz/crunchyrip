@@ -6,23 +6,23 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
-	
+
 	"golang.org/x/net/html"
 )
 
 // Episode holds all episode metadata needed for downloading
 type crEpisode struct {
-	Title 		 string
-	Number 		 string
+	Title        string
+	Number       string
 	SeriesTitle  string
-	SeasonNumber string 
-	EpisodeURL 	 string
-	StreamURL 	 string
+	SeasonNumber string
+	EpisodeURL   string
+	StreamURL    string
 	//SubtitleURL  string
 }
 
 type configStruct struct {
-	Streams  []struct {
+	Streams []struct {
 		Format    string `json:"format"`
 		AudioLang string `json:"audio_lang"`
 		SubLang   string `json:"hardsub_lang"`
@@ -31,12 +31,12 @@ type configStruct struct {
 
 	Subtitles []struct {
 		Language string `json:"language"`
-		URL 	 string `json:"url"`
-		Format 	 string `json:"format"`
+		URL      string `json:"url"`
+		Format   string `json:"format"`
 	} `json:"subtitles"`
 
 	Metadata struct {
-		Title  string `json:"title"`
+		Title string `json:"title"`
 		//Number string `json:"episode_number"`
 		Number string `json:"display_episode_number"`
 	} `json:"metadata"`
@@ -76,7 +76,7 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 		var f func(*html.Node)
 		f = func(n *html.Node) {
 			if n.Type == html.ElementNode && n.Data == "a" {
-				var exists bool 
+				var exists bool
 				var href string
 
 				for _, attr := range n.Attr {
@@ -87,7 +87,7 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 					}
 
 					if exists == true && href != "" {
-						episodes = append(episodes, newEpisode("http://www.crunchyroll.com" + href))
+						episodes = append(episodes, newEpisode("http://www.crunchyroll.com"+href))
 					}
 				}
 			}
@@ -101,7 +101,7 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 		episodes = append(episodes, newEpisode(showURL))
 	}
 
-	for i := len(episodes) / 2 - 1; i >= 0; i-- {
+	for i := len(episodes)/2 - 1; i >= 0; i-- {
 		o := len(episodes) - 1 - i
 		episodes[i], episodes[o] = episodes[o], episodes[i]
 	}
@@ -109,7 +109,7 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 }
 
 func newEpisode(showURL string) *crEpisode {
-	return &crEpisode {
+	return &crEpisode{
 		EpisodeURL: showURL,
 	}
 }
@@ -158,7 +158,7 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	e.Title = config.Metadata.Title
 	e.Number = config.Metadata.Number
 
-	e.SeriesTitle = context.Series.Title 
+	e.SeriesTitle = context.Series.Title
 	e.SeasonNumber = context.Season.Number
 
 	// Two methods, hardsubs or no hardsubs
