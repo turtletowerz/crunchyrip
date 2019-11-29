@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/fatih/color"
+	"github.com/gookit/color"
 )
 
 const (
@@ -36,19 +36,19 @@ var (
 )
 
 func logCyan(format string, a ...interface{}) {
-	color.Cyan(prefix+format, a...)
+	color.Cyan.Printf(format + "\n", a...)
 }
 
 func logInfo(format string, a ...interface{}) {
-	color.White(prefix+format, a...)
+	fmt.Println(prefix, fmt.Sprintf(format, a...))
 }
 
 func logSuccess(format string, a ...interface{}) {
-	color.Green(prefix+format, a...)
+	color.Green.Printf(format + "\n", a...)
 }
 
 func logError(err error) {
-	color.Red(prefix + "Error " + err.Error())
+	color.Red.Println(prefix, "Error " + err.Error())
 }
 
 func renameFile(src, dst string) error {
