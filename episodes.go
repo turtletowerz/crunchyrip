@@ -116,6 +116,9 @@ func newEpisode(showURL string) *crEpisode {
 
 func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	subLang = strings.ReplaceAll(subLang, "-", "")
+	if subLang == "none" {
+		subLang = ""
+	}
 
 	res, err := client.Get(e.EpisodeURL)
 	if err != nil {
@@ -167,7 +170,7 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	}
 
 	if e.StreamURL == "" {
-		return fmt.Errorf("could not find stream with langauge %q", subLang)
+		return fmt.Errorf("could not find stream with language %q", subLang)
 	}
 	return nil
 }

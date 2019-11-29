@@ -20,7 +20,7 @@ import (
 const (
 	allowOutput 	bool = true
 	defaultChannels int = 25
-	AESMETHOD 		string = "AES-128"
+	aesMethod 		string = "AES-128"
 )
 
 type downloader struct {
@@ -90,7 +90,7 @@ func newDownloader(client *httpClient, name, m3u8URL string, channels int) (*dow
 	segCount := int(mediaPlaylist.Count())
 	mediaSegments := make([]*m3u8.MediaSegment, segCount)
 
-	if mediaPlaylist.Key != nil && mediaPlaylist.Key.Method == AESMETHOD {
+	if mediaPlaylist.Key != nil && mediaPlaylist.Key.Method == aesMethod {
 		keyString, err := getKey(client, parsedURL, mediaPlaylist.Key.URI)
 		if err != nil {
 			return nil, fmt.Errorf("getting playlist key: %w", err)
@@ -111,13 +111,13 @@ func newDownloader(client *httpClient, name, m3u8URL string, channels int) (*dow
 			segment.URI = newSegURL.String()
 		}
 
-		if segment.Key != nil && segment.Key.Method == AESMETHOD {
+		if segment.Key != nil && segment.Key.Method == aesMethod {
 			segKey, err := getKey(client, parsedURL, segment.Key.URI)
 			if err != nil {
 				return nil, fmt.Errorf("getting segment %d key: %w", segment.SeqId, err)
 			}
 			segment.Key.URI = segKey
-		} else if mediaPlaylist.Key != nil && mediaPlaylist.Key.Method == AESMETHOD {
+		} else if mediaPlaylist.Key != nil && mediaPlaylist.Key.Method == aesMethod {
 			segment.Key = mediaPlaylist.Key
 		}
 		mediaSegments[i] = segment
@@ -269,7 +269,7 @@ func (d *downloader) downloadSegment(id int, segment *m3u8.MediaSegment) error {
 
 	// This method and shorter and looks like it works fine If this ever fails...
 	// https://github.com/Greyh4t/m3u8-Downloader-Go/blob/master/main.go#L214
-	if segment.Key != nil && segment.Key.Method == AESMETHOD {
+	if segment.Key != nil && segment.Key.Method == aesMethod {
 		aesBlock, err := aes.NewCipher([]byte(segment.Key.URI))
 		if err != nil {
 			return fmt.Errorf("creating aes cipher: %w", err)
