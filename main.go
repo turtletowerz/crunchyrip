@@ -36,19 +36,19 @@ var (
 )
 
 func logCyan(format string, a ...interface{}) {
-	color.Cyan.Printf(format + "\n", a...)
+	color.Cyan.Printf(prefix + format + "\n", a...)
 }
 
 func logInfo(format string, a ...interface{}) {
-	fmt.Println(prefix, fmt.Sprintf(format, a...))
+	fmt.Println(prefix + fmt.Sprintf(format, a...))
 }
 
 func logSuccess(format string, a ...interface{}) {
-	color.Green.Printf(format + "\n", a...)
+	color.Green.Printf(prefix + format + "\n", a...)
 }
 
 func logError(err error) {
-	color.Red.Println(prefix, "Error " + err.Error())
+	color.Red.Println(prefix + "Error " + err.Error())
 }
 
 func renameFile(src, dst string) error {
