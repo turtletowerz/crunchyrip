@@ -141,6 +141,13 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 		return fmt.Errorf("unmarshaling metadata regexp: %w", err)
 	}
 
+	// If this works it will return 4 integers, with the first two
+	// Being the index length of the full expression and the last
+	// Two being the length of the captured expression. We need the
+	// `{"@context":\[` part of the full expression, so we take 
+	// The first int and the fourth, which will get the beginning
+	// Of the full expression but stop at the end of the matched
+	// expression, which will allow us to parse the result to a struct
 	contextResult := regexp.MustCompile(`{"@context":\[(.*)</script>`).FindSubmatchIndex(body)
 	if contextResult == nil {
 		return fmt.Errorf("parsing context regexp")
