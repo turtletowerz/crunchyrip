@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/grafov/m3u8"
+	"github.com/schollz/progressbar"
 )
 
 const (
@@ -31,6 +32,7 @@ type downloader struct {
 	filename     string
 	channelCount int
 	client       *httpClient
+	progress     *progressbar.ProgressBar
 }
 
 func writeOutput(format string, a ...interface{}) {
@@ -129,6 +131,7 @@ func newDownloader(client *httpClient, name, m3u8URL string, channels int) (*dow
 		filename:     name,
 		channelCount: channels,
 		client:       client,
+		progress:     progressbar.New(segCount),
 	}
 	return download, nil
 }
@@ -229,7 +232,7 @@ func findAbsoluteBinary(name string) string {
 }
 
 func (d *downloader) toMP4() error {
-	writeOutput("Converting %q to %q", d.filename+".ts", d.filename+".mp4")
+	writeOutput("\nConverting %q to %q", d.filename+".ts", d.filename+".mp4")
 	cmd := exec.Command(
 		findAbsoluteBinary("ffmpeg"),
 		"-i", d.filename+".ts",
@@ -305,9 +308,7 @@ func (d *downloader) downloadSegment(id int, segment *m3u8.MediaSegment) error {
 	}
 
 	d.completed = d.completed + 1
-	if d.completed%20 == 0 {
-		writeOutput("%d out of %d segements downloaded!", d.completed, d.segmentCount)
-	}
+	d.progress.Add(1)
 	return nil
 }
 
@@ -325,9 +326,21 @@ func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, e
 
 	if listType == m3u8.MASTER {
 		var bestStream *m3u8.Variant
+		qualities := []string{}
 
 		for _, val := range playlist.(*m3u8.MasterPlaylist).Variants {
-			if val.Resolution == resolutionList[quality] {
+			var alreadyAdded bool
+			for _, res := range qualities {
+				if res == val.Resolution {
+					alreadyAdded = true
+				}
+			}
+
+			if alreadyAdded == false {
+				qualities = append(qualities, val.Resolution)
+			}
+			
+			if val.Resolution == quality {
 				if bestStream == nil || val.Bandwidth > bestStream.Bandwidth {
 					bestStream = val
 				}
@@ -335,7 +348,7 @@ func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, e
 		}
 
 		if bestStream == nil {
-			return nil, fmt.Errorf("no stream of quality %q", quality)
+			return nil, fmt.Errorf("no stream of quality %q\nAvaliable qualities: %s", quality, strings.Join(qualities, ", "))
 		}
 		return bestStream, nil
 	}

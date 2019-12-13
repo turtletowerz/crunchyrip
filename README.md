@@ -20,6 +20,8 @@ These are **optional** flags that allow the user to specify small changes they w
 
 - Quality (-quality, -q): 240, 360, 480, 720, 1080 (default 720)
 - Subtitles (-subs, -s): Any RFC 5646 language code (ex. en-US, ja-JP, es-MX). Note not all subtitle languages are supported, and a language code of `none` will ignore subtitles when downloading (default en-US)
+- Resolution (-res): If the quality provided is not found on the video, an error will appear and list the avaliable resolutions. Take one of the resolutions listed in the error and provide this flag with it (ex `-res 624x480`)
+- Dubbed (-dub): If true, will attempt to download the dubbed version of the series (default false)
 
 ### Examples
 	crunchyrip username password https://www.crunchyroll.com/dr-stone

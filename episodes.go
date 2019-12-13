@@ -52,7 +52,36 @@ type contextStruct struct {
 	} `json:"partOfSeries"`
 }
 
-func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
+func getValues(node *html.Node, value, keyword string) (values []string, nodes []*html.Node) {
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			var exists bool
+			var data string
+
+			for _, attr := range n.Attr {
+				if attr.Key == "class" && strings.Contains(attr.Val, keyword) {
+					exists = true
+				} else if attr.Key == value {
+					data = attr.Val
+				}
+
+				if exists == true && data != "" {
+					values = append(values, data)
+					nodes = append(nodes, n)
+				}
+			}
+		}
+
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(node)
+	return
+}
+
+func getEpisodes(client *httpClient, showURL string, dubbed bool) ([]*crEpisode, error) {
 	submatches := regexp.MustCompile(crunchyrollReg).FindStringSubmatch(showURL)
 
 	if len(submatches) != 3 {
@@ -64,7 +93,7 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 	if submatches[2] == "" { // If there is no extra parameter after the slash, then it is a series.
 		resp, err := client.Get(showURL)
 		if err != nil {
-			return nil, fmt.Errorf("getting series page: %w", err)
+			return nil, fmt.Errorf("getting series page: %w", err) 
 		}
 
 		defer resp.Body.Close()
@@ -73,30 +102,21 @@ func getEpisodes(client *httpClient, showURL string) ([]*crEpisode, error) {
 			return nil, fmt.Errorf("parsing series page: %w", err)
 		}
 
-		var f func(*html.Node)
-		f = func(n *html.Node) {
-			if n.Type == html.ElementNode && n.Data == "a" {
-				var exists bool
-				var href string
+		seasons, data := getValues(nodes, "title", "season-dropdown")
+		//fmt.Println("seasons: ", len(seasons))
+		for i, name := range seasons {
+			hasDubbedTitle := strings.Contains(name, "Dubbed")
 
-				for _, attr := range n.Attr {
-					if attr.Key == "class" && strings.HasSuffix(attr.Val, "episode") {
-						exists = true
-					} else if attr.Key == "href" {
-						href = attr.Val
-					}
+			if (dubbed && hasDubbedTitle) || (!dubbed && !hasDubbedTitle) {
+				//fmt.Println("doing: " + name)
+				hrefs, _ := getValues(data[i].Parent, "href", "titlefix episode")
 
-					if exists == true && href != "" {
-						episodes = append(episodes, newEpisode("http://www.crunchyroll.com"+href))
-					}
+				for _, href := range hrefs {
+					episodes = append(episodes, newEpisode("http://www.crunchyroll.com"+href))
 				}
 			}
-
-			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				f(c)
-			}
 		}
-		f(nodes)
+		//fmt.Println("episodes: ", len(episodes))
 	} else {
 		episodes = append(episodes, newEpisode(showURL))
 	}
@@ -182,7 +202,13 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	return nil
 }
 
-func (e *crEpisode) Download(client *httpClient, quality string) error {
+func (e *crEpisode) Download(client *httpClient, quality, resolution string) error {
+	if resolution == "" {
+		quality = resolutionList[quality]
+	} else {
+		quality = resolution
+	}
+
 	bestStream, err := bestMasterStream(client, e.StreamURL, quality)
 	if err != nil {
 		return fmt.Errorf("getting best stream url: %w", err)
