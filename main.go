@@ -75,7 +75,6 @@ func getSeason(season string) string {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	dub := flag.Bool("dub", false, "If true, crunchyrip will attempt to download English version")
-	res := flag.String("res", "", "Custom resolution if normal resolutions are nonexistent")
 	subs := flag.String("subs", "en-US", "Subtitle language: en-US, ja-JP (default en-US)")
 	flag.StringVar(subs, "s", *subs, "Subtitle language: en-US, ja-JP (default en-US) (shorthand)")
 	quality := flag.String("quality", "720", "Stream quality (default 720)")
@@ -98,13 +97,13 @@ func main() {
 	}
 
 	logSuccess("Crunchyroll login successful!")
-	if err := download(crunchyrollClient, flag.Arg(2), *quality, *subs, *res, *dub); err != nil {
+	if err := download(crunchyrollClient, flag.Arg(2), *quality, *subs, *dub); err != nil {
 		logError(err)
 	}
 	return
 }
 
-func download(client *httpClient, showURL, quality, subLang, resolution string, dubbed bool) error {
+func download(client *httpClient, showURL, quality, subLang string, dubbed bool) error {
 	_, statErr := os.Stat(tempDir)
 	if statErr != nil {
 		logInfo("Generating new temporary directory")
@@ -148,7 +147,7 @@ func download(client *httpClient, showURL, quality, subLang, resolution string, 
 		}
 
 		logCyan("Downloading: %s", episode.Title)
-		if err := episode.Download(client, quality, resolution); err != nil {
+		if err := episode.Download(client, quality); err != nil {
 			logError(fmt.Errorf("downloading episode: %w", err))
 			continue
 		}

@@ -18,9 +18,8 @@ The command will download the series/episode into the current working directory
 #### Flag Options
 These are **optional** flags that allow the user to specify small changes they would like with the download
 
-- Quality (-quality, -q): 240, 360, 480, 720, 1080 (default 720)
+- Quality (-quality, -q): 240, 360, 480, 720, 1080. If the previous quality options are not found on the video, you can specify a custom resolution by doing `-q [WidthxHeight]` ex. `-q 624x480` (default 720)
 - Subtitles (-subs, -s): Any RFC 5646 language code (ex. en-US, ja-JP, es-MX). Note not all subtitle languages are supported, and a language code of `none` will ignore subtitles when downloading (default en-US)
-- Resolution (-res): If the quality provided is not found on the video, an error will appear and list the avaliable resolutions. Take one of the resolutions listed in the error and provide this flag with it (ex `-res 624x480`)
 - Dubbed (-dub): If true, will attempt to download the dubbed version of the series (default false)
 
 ### Examples

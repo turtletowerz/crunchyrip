@@ -202,11 +202,9 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	return nil
 }
 
-func (e *crEpisode) Download(client *httpClient, quality, resolution string) error {
-	if resolution == "" {
-		quality = resolutionList[quality]
-	} else {
-		quality = resolution
+func (e *crEpisode) Download(client *httpClient, quality string) error {
+	if val, exists := resolutionList[quality]; exists == true {
+		quality = val
 	}
 
 	bestStream, err := bestMasterStream(client, e.StreamURL, quality)
