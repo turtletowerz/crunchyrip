@@ -10,6 +10,11 @@
 ### Installation
 	go get github.com/turtletowerz/crunchyrip
 
+### Updating
+If you want to update to the newest version of crunchyrip, simply run
+
+	go get -u github.com/turtletowerz/crunchyrip
+
 #### Usage
 The command will download the series/episode into the current working directory
 	
