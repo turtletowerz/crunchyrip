@@ -14,7 +14,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/grafov/m3u8"
+	"github.com/turtletowerz/m3u8"
 	"github.com/schollz/progressbar"
 )
 
@@ -312,8 +312,36 @@ func (d *downloader) downloadSegment(id int, segment *m3u8.MediaSegment) error {
 	return nil
 }
 
+func getAccurateQuality(variants []*m3u8.Variant, quality string) ([]string, *m3u8.Variant) {
+	qualities := map[int]*m3u8.Variant{}
+
+	for _, val := range variants {
+		res, exists := qualities[val.Resolution.Width]
+		if (exists == false || (exists == true && val.Bandwidth > res.Bandwidth)) {
+			qualities[val.Resolution.Width] = val
+		}
+	}
+
+	var qualityStrings []string
+	var bestQualityIndex int
+
+	for width, variant := range qualities {
+		resolutionString := fmt.Sprintf("%dx%d", variant.Resolution.Width, variant.Resolution.Height)
+		qualityStrings = append(qualityStrings, resolutionString)
+
+		if (quality == "max" && width > bestQualityIndex) || (quality == "min" && (width < bestQualityIndex || bestQualityIndex == 0)) || quality == resolutionString {
+			bestQualityIndex = width
+		}
+	}
+
+	if bestVariant, exists := qualities[bestQualityIndex]; exists == true {
+		return qualityStrings, bestVariant
+	}
+	return qualityStrings, nil
+}
+
 func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, error) {
-	resp, err := client.Get(url)
+	resp, err := client.Get(url) 
 	if err != nil {
 		return nil, fmt.Errorf("getting video url: %w", err)
 	}
@@ -325,32 +353,13 @@ func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, e
 	}
 
 	if listType == m3u8.MASTER {
-		var bestStream *m3u8.Variant
-		qualities := []string{}
+		qualities, bestQuality := getAccurateQuality(playlist.(*m3u8.MasterPlaylist).Variants, quality)
+		logInfo("Avaliable qualities: %s", strings.Join(qualities, ", "))
 
-		for _, val := range playlist.(*m3u8.MasterPlaylist).Variants {
-			var alreadyAdded bool
-			for _, res := range qualities {
-				if res == val.Resolution {
-					alreadyAdded = true
-				}
-			}
-
-			if alreadyAdded == false {
-				qualities = append(qualities, val.Resolution)
-			}
-			
-			if val.Resolution == quality {
-				if bestStream == nil || val.Bandwidth > bestStream.Bandwidth {
-					bestStream = val
-				}
-			}
-		}
-
-		if bestStream == nil {
+		if bestQuality == nil {
 			return nil, fmt.Errorf("no stream of quality %q\nAvaliable qualities: %s", quality, strings.Join(qualities, ", "))
 		}
-		return bestStream, nil
+		return bestQuality, nil
 	}
 	return nil, fmt.Errorf("not a master playlist")
 }

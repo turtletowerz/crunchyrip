@@ -20,8 +20,9 @@ const (
 )
 
 var (
-	tempDir   string = os.TempDir() + string(os.PathSeparator) + "crunchyrip"
-	tsStorage string = tempDir + pathSep + "tsStorage"
+	optionsErr error = fmt.Errorf("OPTIONS_ERROR")
+	tempDir    string = os.TempDir() + string(os.PathSeparator) + "crunchyrip"
+	tsStorage  string = tempDir + pathSep + "tsStorage"
 
 	// I need to figure out the anime with the most seasons
 	numbers = []string{"One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"}
@@ -40,7 +41,7 @@ func logCyan(format string, a ...interface{}) {
 }
 
 func logInfo(format string, a ...interface{}) {
-	fmt.Println(prefix + fmt.Sprintf(format, a...))
+	color.White.Printf(prefix + format + "\n", a...)
 }
 
 func logSuccess(format string, a ...interface{}) {
@@ -74,7 +75,8 @@ func getSeason(season string) string {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	dub := flag.Bool("dub", false, "If true, crunchyrip will attempt to download English version")
+	options := flag.Bool("options", false, "If true, will print all avaliable resolutions and subtitle languages for the series")
+	dub := flag.Bool("dub", false, "If true, will attempt to download English version")
 	subs := flag.String("subs", "en-US", "Subtitle language: en-US, ja-JP (default en-US)")
 	flag.StringVar(subs, "s", *subs, "Subtitle language: en-US, ja-JP (default en-US) (shorthand)")
 	quality := flag.String("quality", "720", "Stream quality (default 720)")
@@ -97,13 +99,13 @@ func main() {
 	}
 
 	logSuccess("Crunchyroll login successful!")
-	if err := download(crunchyrollClient, flag.Arg(2), *quality, *subs, *dub); err != nil {
+	if err := download(crunchyrollClient, flag.Arg(2), *quality, *subs, *dub, *options); err != nil {
 		logError(err)
 	}
 	return
 }
 
-func download(client *httpClient, showURL, quality, subLang string, dubbed bool) error {
+func download(client *httpClient, showURL, quality, subLang string, dubbed, options bool) error {
 	_, statErr := os.Stat(tempDir)
 	if statErr != nil {
 		logInfo("Generating new temporary directory")
@@ -147,12 +149,15 @@ func download(client *httpClient, showURL, quality, subLang string, dubbed bool)
 		}
 
 		logCyan("Downloading: %s", episode.Title)
-		if err := episode.Download(client, quality); err != nil {
+		if err := episode.Download(client, quality, options); err != nil {
+			if err == optionsErr {
+				return nil
+			}
 			logError(fmt.Errorf("downloading episode: %w", err))
 			continue
 		}
 
-		if err := renameFile(tempDir+pathSep+"episode.mp4", filepath+filename); err != nil {
+		if err := renameFile(tempDir + pathSep + "episode.mp4", filepath + filename); err != nil {
 			logError(fmt.Errorf("renaming file: %w", err))
 			continue
 		}

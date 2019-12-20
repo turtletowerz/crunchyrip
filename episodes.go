@@ -10,7 +10,6 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Episode holds all episode metadata needed for downloading
 type crEpisode struct {
 	Title        string
 	Number       string
@@ -103,20 +102,24 @@ func getEpisodes(client *httpClient, showURL string, dubbed bool) ([]*crEpisode,
 		}
 
 		seasons, data := getValues(nodes, "title", "season-dropdown")
-		//fmt.Println("seasons: ", len(seasons))
-		for i, name := range seasons {
-			hasDubbedTitle := strings.Contains(name, "Dubbed")
+		var hrefs []string 
 
-			if (dubbed && hasDubbedTitle) || (!dubbed && !hasDubbedTitle) {
-				//fmt.Println("doing: " + name)
-				hrefs, _ := getValues(data[i].Parent, "href", "titlefix episode")
+		if len(seasons) == 0 { //It's a single season and doesn't have the season dividers
+			hrefs, _ = getValues(nodes, "href", "titlefix episode")			
+		} else { //It's more than one season and does have them
+			for i, name := range seasons {
+				hasDubbedTitle := strings.Contains(name, "Dubbed")
 
-				for _, href := range hrefs {
-					episodes = append(episodes, newEpisode("http://www.crunchyroll.com"+href))
+				if (dubbed && hasDubbedTitle) || (!dubbed && !hasDubbedTitle) {
+					//fmt.Println("doing: " + name)
+					hrefs, _ = getValues(data[i].Parent, "href", "titlefix episode")				
 				}
 			}
 		}
-		//fmt.Println("episodes: ", len(episodes))
+
+		for _, href := range hrefs {
+			episodes = append(episodes, newEpisode("http://www.crunchyroll.com" + href))
+		}
 	} else {
 		episodes = append(episodes, newEpisode(showURL))
 	}
@@ -184,7 +187,6 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 
 	e.Title = config.Metadata.Title
 	e.Number = config.Metadata.Number
-
 	e.SeriesTitle = context.Series.Title
 	e.SeasonNumber = context.Season.Number
 
@@ -202,17 +204,22 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	return nil
 }
 
-func (e *crEpisode) Download(client *httpClient, quality string) error {
+func (e *crEpisode) Download(client *httpClient, quality string, options bool) error {
 	if val, exists := resolutionList[quality]; exists == true {
 		quality = val
 	}
 
-	bestStream, err := bestMasterStream(client, e.StreamURL, quality)
+	best, err := bestMasterStream(client, e.StreamURL, quality)
+	if options {
+		return optionsErr
+	}
+
 	if err != nil {
 		return fmt.Errorf("getting best stream url: %w", err)
 	}
 
-	downloader, err := newDownloader(client, "episode", bestStream.URI, 15)
+	logInfo("Closest quality: %dx%d", best.Resolution.Width, best.Resolution.Height)
+	downloader, err := newDownloader(client, "episode", best.URI, 15)
 	if err != nil {
 		return fmt.Errorf("creating hls downloader: %w", err)
 	}
