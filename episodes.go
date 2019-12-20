@@ -92,7 +92,7 @@ func getEpisodes(client *httpClient, showURL string, dubbed bool) ([]*crEpisode,
 	if submatches[2] == "" { // If there is no extra parameter after the slash, then it is a series.
 		resp, err := client.Get(showURL)
 		if err != nil {
-			return nil, fmt.Errorf("getting series page: %w", err) 
+			return nil, fmt.Errorf("getting series page: %w", err)
 		}
 
 		defer resp.Body.Close()
@@ -102,23 +102,23 @@ func getEpisodes(client *httpClient, showURL string, dubbed bool) ([]*crEpisode,
 		}
 
 		seasons, data := getValues(nodes, "title", "season-dropdown")
-		var hrefs []string 
+		var hrefs []string
 
 		if len(seasons) == 0 { //It's a single season and doesn't have the season dividers
-			hrefs, _ = getValues(nodes, "href", "titlefix episode")			
+			hrefs, _ = getValues(nodes, "href", "titlefix episode")
 		} else { //It's more than one season and does have them
 			for i, name := range seasons {
 				hasDubbedTitle := strings.Contains(name, "Dubbed")
 
 				if (dubbed && hasDubbedTitle) || (!dubbed && !hasDubbedTitle) {
 					//fmt.Println("doing: " + name)
-					hrefs, _ = getValues(data[i].Parent, "href", "titlefix episode")				
+					hrefs, _ = getValues(data[i].Parent, "href", "titlefix episode")
 				}
 			}
 		}
 
 		for _, href := range hrefs {
-			episodes = append(episodes, newEpisode("http://www.crunchyroll.com" + href))
+			episodes = append(episodes, newEpisode("http://www.crunchyroll.com"+href))
 		}
 	} else {
 		episodes = append(episodes, newEpisode(showURL))
@@ -167,7 +167,7 @@ func (e *crEpisode) GetEpisodeInfo(client *httpClient, subLang string) error {
 	// If this works it will return 4 integers, with the first two
 	// Being the index length of the full expression and the last
 	// Two being the length of the captured expression. We need the
-	// `{"@context":\[` part of the full expression, so we take 
+	// `{"@context":\[` part of the full expression, so we take
 	// The first int and the fourth, which will get the beginning
 	// Of the full expression but stop at the end of the matched
 	// expression, which will allow us to parse the result to a struct
@@ -211,7 +211,7 @@ func (e *crEpisode) Download(client *httpClient, quality string, options bool) e
 
 	best, err := bestMasterStream(client, e.StreamURL, quality)
 	if options {
-		return optionsErr
+		return errOptions
 	}
 
 	if err != nil {

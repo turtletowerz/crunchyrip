@@ -14,8 +14,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/turtletowerz/m3u8"
 	"github.com/schollz/progressbar"
+	"github.com/turtletowerz/m3u8"
 )
 
 const (
@@ -317,7 +317,7 @@ func getAccurateQuality(variants []*m3u8.Variant, quality string) ([]string, *m3
 
 	for _, val := range variants {
 		res, exists := qualities[val.Resolution.Width]
-		if (exists == false || (exists == true && val.Bandwidth > res.Bandwidth)) {
+		if exists == false || (exists == true && val.Bandwidth > res.Bandwidth) {
 			qualities[val.Resolution.Width] = val
 		}
 	}
@@ -341,7 +341,7 @@ func getAccurateQuality(variants []*m3u8.Variant, quality string) ([]string, *m3
 }
 
 func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, error) {
-	resp, err := client.Get(url) 
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("getting video url: %w", err)
 	}
@@ -354,7 +354,7 @@ func bestMasterStream(client *httpClient, url, quality string) (*m3u8.Variant, e
 
 	if listType == m3u8.MASTER {
 		qualities, bestQuality := getAccurateQuality(playlist.(*m3u8.MasterPlaylist).Variants, quality)
-		logInfo("Avaliable qualities: %s", strings.Join(qualities, ", "))
+		logInfo("Available qualities: %s", strings.Join(qualities, ", "))
 
 		if bestQuality == nil {
 			return nil, fmt.Errorf("no stream of quality %q\nAvaliable qualities: %s", quality, strings.Join(qualities, ", "))

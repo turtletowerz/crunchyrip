@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	optionsErr error = fmt.Errorf("OPTIONS_ERROR")
+	errOptions error  = fmt.Errorf("OPTIONS_ERROR")
 	tempDir    string = os.TempDir() + string(os.PathSeparator) + "crunchyrip"
 	tsStorage  string = tempDir + pathSep + "tsStorage"
 
@@ -37,15 +37,15 @@ var (
 )
 
 func logCyan(format string, a ...interface{}) {
-	color.Cyan.Printf(prefix + format + "\n", a...)
+	color.Cyan.Printf(prefix+format+"\n", a...)
 }
 
 func logInfo(format string, a ...interface{}) {
-	color.White.Printf(prefix + format + "\n", a...)
+	color.White.Printf(prefix+format+"\n", a...)
 }
 
 func logSuccess(format string, a ...interface{}) {
-	color.Green.Printf(prefix + format + "\n", a...)
+	color.Green.Printf(prefix+format+"\n", a...)
 }
 
 func logError(err error) {
@@ -75,7 +75,7 @@ func getSeason(season string) string {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	options := flag.Bool("options", false, "If true, will print all avaliable resolutions and subtitle languages for the series")
+	options := flag.Bool("options", false, "If true, will print all available resolutions and subtitle languages for the series")
 	dub := flag.Bool("dub", false, "If true, will attempt to download English version")
 	subs := flag.String("subs", "en-US", "Subtitle language: en-US, ja-JP (default en-US)")
 	flag.StringVar(subs, "s", *subs, "Subtitle language: en-US, ja-JP (default en-US) (shorthand)")
@@ -150,14 +150,14 @@ func download(client *httpClient, showURL, quality, subLang string, dubbed, opti
 
 		logCyan("Downloading: %s", episode.Title)
 		if err := episode.Download(client, quality, options); err != nil {
-			if err == optionsErr {
+			if err == errOptions {
 				return nil
 			}
 			logError(fmt.Errorf("downloading episode: %w", err))
 			continue
 		}
 
-		if err := renameFile(tempDir + pathSep + "episode.mp4", filepath + filename); err != nil {
+		if err := renameFile(tempDir+pathSep+"episode.mp4", filepath+filename); err != nil {
 			logError(fmt.Errorf("renaming file: %w", err))
 			continue
 		}
